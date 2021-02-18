@@ -1,24 +1,24 @@
 import json
 
-SHIFT = ('-----------------------------------------------'
-'----------------------------')
+# создает отсечение из "---" длины 8*n
 
 # выводит таблицу
 def print_table(table):
     i = 1
-    print(SHIFT)
-    print('  1',end='\t')
-    for j in range(2, len(table) + 1):
-        print(j,end='\t')
+    shift = '-'*(8*len(table[0]) + 3)
+    print(shift)
+    print('\t1',end='\t')
+    for j in range(1, len(table[0])):
+        print(j + 1,end='\t')
     print()
-    
+    print(shift)
     for row in table:
-        print(i, end=' ')
+        print(i, ' |', end='\t')
         for v in row:
             print(v, end='\t')
         print()
         i += 1
-    print(SHIFT, end='\n\n')
+    print(shift, end='\n\n')
 
 # сравнивает две альтернативы
 def compare(alt1, alt2):
@@ -30,7 +30,7 @@ def compare(alt1, alt2):
             return False # неопределенность
     return flag 
 
-def get_Pareto_table(markers, table):
+def get_pareto_table(markers, table):
 
     table_copy = [table[i].copy() for i in range(len(table))]
     
@@ -58,6 +58,14 @@ def get_Pareto_table(markers, table):
                 res[j][i] = j + 1    
     return res 
 
+def get_raw_pareto_set(table):
+    res_set = set()
+    for row in table:
+        for el in row:
+            if isinstance(el, int):
+                res_set.add(el)
+    return res_set
+
 # чтение файла с данными
 with open('pr1_data.json', encoding='utf-8') as json_file:
     content = json.load(json_file)
@@ -67,6 +75,8 @@ with open('pr1_data.json', encoding='utf-8') as json_file:
     t_table = [list(table[i].values())[1:] for i in range(len(table))]
     print_table(t_table)
 
-    res_table = get_Pareto_table(markers, t_table)
+    res_table = get_pareto_table(markers, t_table)
     print_table(res_table)
-    
+
+    raw_set = get_raw_pareto_set(res_table)
+    print('Неоптимизированное множество Парето:', raw_set)    
