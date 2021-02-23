@@ -1,7 +1,5 @@
 import json
 
-# создает отсечение из "---" длины 8*n
-
 # выводит таблицу
 def print_table(table):
     i = 1
@@ -37,8 +35,7 @@ def get_pareto_table(markers, table):
     # корректировка данных для удобства сравнения
     for i in range(len(table_copy)):
         for j in range(len(table_copy[i])):
-            if(not markers[j]):
-                table_copy[i][j] = - table_copy[i][j]
+                table_copy[i][j] *= markers[j]
 
     res = [['x' for _ in range(len(table_copy))] for _ in range(len(table_copy))]
     
@@ -66,6 +63,17 @@ def get_raw_pareto_set(table):
                 res_set.add(el)
     return res_set
 
+# метод верхних/нижних границ
+def optimize_pareto_set_1(table):
+    pass
+
+# субоптимизация
+def optimize_pareto_set_2(table):
+    pass
+
+def optimize_pareto_set_3(table):
+    pass
+
 # чтение файла с данными
 with open('pr1_data.json', encoding='utf-8') as json_file:
     content = json.load(json_file)
@@ -79,4 +87,6 @@ with open('pr1_data.json', encoding='utf-8') as json_file:
     print_table(res_table)
 
     raw_set = get_raw_pareto_set(res_table)
-    print('Неоптимизированное множество Парето:', raw_set)    
+    print('Неоптимизированное множество Парето:', raw_set)
+
+
