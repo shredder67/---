@@ -71,6 +71,7 @@ def optimize_pareto_set_1(table):
 def optimize_pareto_set_2(table):
     pass
 
+# лексикографическая оптимизация
 def optimize_pareto_set_3(table):
     pass
 
