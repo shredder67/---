@@ -64,8 +64,16 @@ def get_raw_pareto_set(table):
     return res_set
 
 # метод верхних/нижних границ
-def optimize_pareto_set_1(table):
-    pass
+def optimize_pareto_set_1(unopt_set, data, borders):
+    opt_set = set()
+    for el in unopt_set:
+        for i in range(len(data[el])):
+            if borders[el][0] > data[el][i] or borders[el][1] < data[el][i]:
+                break
+        else:
+            opt_set.add(el)
+    return opt_set
+        
 
 # субоптимизация
 def optimize_pareto_set_2(table):
@@ -90,4 +98,9 @@ with open('pr1_data.json', encoding='utf-8') as json_file:
     raw_set = get_raw_pareto_set(res_table)
     print('Неоптимизированное множество Парето:', raw_set)
 
+    borders = [(300, 500), (200, 300), (3, 8), (0.2, 0.5),
+                (2, 3.5), (700, 1400), (25, 50), (1100, 1750),
+                (100, 250), (300, 400)]
 
+    opt_set = optimize_pareto_set_1(raw_set, t_table, borders)
+    print('Множество, оптимизированное с помощью метода границ:', opt_set)
