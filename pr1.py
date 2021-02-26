@@ -18,6 +18,9 @@ def print_table(table):
         i += 1
     print(shift, end='\n\n')
 
+def copy_table(table):
+    return [table[i].copy() for i in range(len(table))]
+
 # сравнивает две альтернативы
 def compare(alt1, alt2):
     flag = False
@@ -30,7 +33,7 @@ def compare(alt1, alt2):
 
 def get_pareto_table(markers, table):
 
-    table_copy = [table[i].copy() for i in range(len(table))]
+    table_copy = copy_table(table)
     
     # корректировка данных для удобства сравнения
     for i in range(len(table_copy)):
@@ -68,16 +71,42 @@ def optimize_pareto_set_1(unopt_set, data, borders):
     opt_set = set()
     for el in unopt_set:
         for i in range(len(data[el])):
-            if borders[el][0] > data[el][i] or borders[el][1] < data[el][i]:
+            if borders[i][0] > data[el - 1][i] or borders[i][1] < data[el - 1][i]:
                 break
         else:
             opt_set.add(el)
     return opt_set
-        
 
 # субоптимизация
-def optimize_pareto_set_2(table):
-    pass
+def optimize_pareto_set_2(unopt_set, data, main_cr, borders):
+    # модифицируем таблицу информации о номере альтернативы
+    mod_data = copy_table(data)
+    for i in range(len(data)):
+        mod_data[i].insert(0, i)
+    
+    # удаление из таблицы лишних данных
+    i = 0
+    while i < len(mod_data):
+        if (mod_data[i][0] + 1) not in unopt_set:
+            del mod_data[i]
+        else:
+            i += 1
+    
+    # сортируем таблицу по основному критерию
+    mod_data = sorted(mod_data, key = lambda row: row[main_cr], reverse = False)
+
+    # вычленяем альтернативы с максимальным основным критерием
+    res = set()
+    i = 0
+    while mod_data[i][main_cr] == mod_data[0][main_cr]:
+        res.add(mod_data[i][0] + 1)
+        i += 1
+
+    if len(res) == 1:
+        return res
+
+    # если в множестве больше одного элемента, требуется проверить остальные на соответствие нижним границам
+    # TODO: finish subopt with low/high border check depending on tendency type    
 
 # лексикографическая оптимизация
 def optimize_pareto_set_3(table):
@@ -88,8 +117,10 @@ with open('pr1_data.json', encoding='utf-8') as json_file:
     content = json.load(json_file)
     markers = content["comp_markers"]
     table = content["data"]
+    borders = content["borders"]
     #таблица, храняшая все критерии по индексам
     t_table = [list(table[i].values())[1:] for i in range(len(table))]
+    cr_names = list(table[0].keys())
     print_table(t_table)
 
     res_table = get_pareto_table(markers, t_table)
@@ -98,9 +129,12 @@ with open('pr1_data.json', encoding='utf-8') as json_file:
     raw_set = get_raw_pareto_set(res_table)
     print('Неоптимизированное множество Парето:', raw_set)
 
-    borders = [(300, 500), (200, 300), (3, 8), (0.2, 0.5),
-                (2, 3.5), (700, 1400), (25, 50), (1100, 1750),
-                (100, 250), (300, 400)]
-
     opt_set = optimize_pareto_set_1(raw_set, t_table, borders)
     print('Множество, оптимизированное с помощью метода границ:', opt_set)
+
+    # main_criteria = input("Введите главный критерий для субоптимизации: ")
+    main_criteria = "Урон"
+
+    opt_set = optimize_pareto_set_2(raw_set, t_table, cr_names.index(main_criteria) - 1, borders)
+    print('Множество, оптимизированное с помощью метода субоптимизации:', opt_set)
+
