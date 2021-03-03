@@ -109,8 +109,8 @@ def optimize_pareto_set_2(unopt_set, data, main_cr, borders):
     # TODO: finish subopt with low/high border check depending on tendency type    
 
 # лексикографическая оптимизация
-def optimize_pareto_set_3(table):
-    pass
+def optimize_pareto_set_3(unpot_set, data, priorities):
+    return set()
 
 # чтение файла с данными
 with open('pr1_data.json', encoding='utf-8') as json_file:
@@ -118,6 +118,7 @@ with open('pr1_data.json', encoding='utf-8') as json_file:
     markers = content["comp_markers"]
     table = content["data"]
     borders = content["borders"]
+    priorities = content["priorities"]
     #таблица, храняшая все критерии по индексам
     t_table = [list(table[i].values())[1:] for i in range(len(table))]
     cr_names = list(table[0].keys())
@@ -137,4 +138,7 @@ with open('pr1_data.json', encoding='utf-8') as json_file:
 
     opt_set = optimize_pareto_set_2(raw_set, t_table, cr_names.index(main_criteria) - 1, borders)
     print('Множество, оптимизированное с помощью метода субоптимизации:', opt_set)
+
+    opt_set = optimize_pareto_set_3(raw_set, t_table, priorities)
+    print('Множество, оптимизированное с помощью лексикографического анализа:', opt_set)
 
