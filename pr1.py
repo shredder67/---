@@ -77,40 +77,73 @@ def optimize_pareto_set_1(unopt_set, data, borders):
             opt_set.add(el)
     return opt_set
 
-# субоптимизация
-def optimize_pareto_set_2(unopt_set, data, main_cr, borders):
-    # модифицируем таблицу информации о номере альтернативы
-    mod_data = copy_table(data)
-    for i in range(len(data)):
-        mod_data[i].insert(0, i)
-    
-    # удаление из таблицы лишних данных
+# исключает все альтернативы из таблицы, не включенные в множество
+def cut_table(opt_set, table):
     i = 0
-    while i < len(mod_data):
-        if (mod_data[i][0] + 1) not in unopt_set:
-            del mod_data[i]
+    while i < len(table):
+        if (table[i][0]) not in opt_set:
+            del table[i]
         else:
             i += 1
-    
-    # сортируем таблицу по основному критерию
-    mod_data = sorted(mod_data, key = lambda row: row[main_cr], reverse = False)
 
+# модифицирует упорядоченную таблицу альтернатив столбцом из номеров альтернатив
+def add_table_index(table):
+    for i in range(len(table)):
+        table[i].insert(0, i + 1)
+
+# субоптимизация
+def optimize_pareto_set_2(unopt_set, data, main_cr, markers, borders):
+    # модифицируем таблицу информации о номере альтернативы
+    mod_data = copy_table(data)
+    add_table_index(mod_data)
+    
+    # удаление из таблицы лишних данных
+    cut_table(unopt_set, mod_data)
+    # сортируем таблицу по основному критерию
+    mod_data = sorted(mod_data, key = lambda row: row[main_cr + 1]*(-markers[main_cr]))
     # вычленяем альтернативы с максимальным основным критерием
     res = set()
     i = 0
-    while mod_data[i][main_cr] == mod_data[0][main_cr]:
-        res.add(mod_data[i][0] + 1)
+    while mod_data[i][main_cr + 1] == mod_data[0][main_cr  + 1]:
+        res.add(mod_data[i][0])
         i += 1
 
-    if len(res) == 1:
-        return res
-
-    # если в множестве больше одного элемента, требуется проверить остальные на соответствие нижним границам
-    # TODO: finish subopt with low/high border check depending on tendency type    
+    # требуется проверить альтернативы на соответствие нижним границам
+    cut_table(res, mod_data)
+    i = 0
+    while i < len(mod_data):
+        alt = mod_data[i]
+        j = 0
+        while j < len(borders):
+            # проверка j-того критерия у i-той альтернативы на попадание в установленные границы
+            if alt[j + 1] < borders[j][0]:
+                res.discard(alt[0])
+                break
+            j += 1
+        i += 1
+    return res
 
 # лексикографическая оптимизация
-def optimize_pareto_set_3(unpot_set, data, priorities):
-    return set()
+def optimize_pareto_set_3(unopt_set, data, priorities, markers):
+    #удаляем лишние альтернативы
+    mod_data = copy_table(data)
+    add_table_index(mod_data)
+    cut_table(unopt_set, mod_data)
+
+    res = unopt_set.copy()
+    i = 0
+    # пока в множестве не останется один элемент или не закончатся критерии
+    while len(res) > 1 or i == len(priorities):
+        cr = priorities[i]
+        mod_data = sorted(mod_data, key = lambda row : row[cr + 1]*(-markers[cr]))
+        j = len(mod_data) - 1
+        while mod_data[j][cr + 1] < mod_data[0][cr + 1]:
+            res.discard(mod_data[j][0])
+            j -= 1
+        i += 1
+
+    return res
+            
 
 # чтение файла с данными
 with open('pr1_data.json', encoding='utf-8') as json_file:
@@ -136,9 +169,9 @@ with open('pr1_data.json', encoding='utf-8') as json_file:
     # main_criteria = input("Введите главный критерий для субоптимизации: ")
     main_criteria = "Урон"
 
-    opt_set = optimize_pareto_set_2(raw_set, t_table, cr_names.index(main_criteria) - 1, borders)
+    opt_set = optimize_pareto_set_2(raw_set, t_table, cr_names.index(main_criteria) - 1, markers, borders)
     print('Множество, оптимизированное с помощью метода субоптимизации:', opt_set)
 
-    opt_set = optimize_pareto_set_3(raw_set, t_table, priorities)
+    opt_set = optimize_pareto_set_3(raw_set, t_table, priorities, markers)
     print('Множество, оптимизированное с помощью лексикографического анализа:', opt_set)
 
